@@ -1,0 +1,59 @@
+<pre class='metadata'>
+Title: Laundering for Arrays of Unknown Bound
+Shortname: PXXXX
+Level: 0
+Status: D
+Group: WG21
+URL: http://example.com/url-this-spec-will-live-at
+Editor: Jason Cobb <jason.e.cobb@gmail.com>
+Abstract: This paper would ensure that conforming allocators can be implemented, by permitting the template argument to std::launder to be an array of unknown bound.
+</pre>
+
+Introduction {#intro}
+=====================
+
+[[P0593]] introduced the ability for objects to be implicitly created under
+certain circumstances.  In doing so, it added the requirement to allocators
+that, when <code>allocate(n)</code> is called, they create, and return a
+pointer to, a <code>T[n]</code>, without additionally creating any array
+elements. [[N4892]], in [allocator.requirements.general], provides the
+	following as an example of a way to implement this:
+	<code>std::launder(reinterpret_cast&lt;T*&gt;(new (p) std::byte[n *
+		sizeof(T)]))</code>.
+
+This example is incorrect.
+
+After the lifetime of the <code>byte[]</code> is begun, objects can be
+implicitly created ([intro.object]/13).  There are two possible cases here,
+both of which result in UB. 
+
+First, if <code>T</code> is not an implicit-lifetime type, then only the array
+object can be created (since all array types are implicit-lifetime, even if the
+element type is not), and it must be created in order to satisfy the allocator
+requirements. This is the goal of the allocator, but in an attempt to obtain a
+pointer to the first element, it passes the pointer from <code>new</code> to
+<code>std::launder</code>.
+
+<code>std::launder</code> has the following preconditions:
+<blockquote>
+	<code>p</code> represents the address <i>A</i> of a byte in memory. An
+	object <i>X</i> that is within its lifetime and whose type is similar
+	to <code>T</code> is located at the address <i>A</i>.  All bytes of
+	storage that would be reachable through the result are reachable
+	through <code>p</code> (see below).
+</blockquote>
+
+The result of <code>new</code> does not point to a <code>T</code>, and it
+cannot have created <code>T</code>, since it is not an implicit-lifetime type.
+The example therefore violates the preconditions of <code>std::launder</code>
+and has undefined behavior.
+
+If <code>T</code> is an implicit-lifetime type, then implicit object creation
+must still create the array object in order to satisfy the allocator
+requirements, but it could also create a <code>T</code> object at the first
+byte in order to satisfy the preconditions of <code>std::launder</code>.
+However, this would violate the allocator requirements (since it creates an
+array element object, violating the requirements on <code>allocate</code>),
+yielding UB when used as a standard allocator per [res.on.functions]/2.3.  No
+set of implicitly created objects would give the program defined behavior, so
+the program has undefined behavior ([intro.object]/10).

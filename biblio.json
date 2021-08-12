@@ -1,0 +1,18 @@
+{
+	"P0593": {
+		"authors": [
+			"Richard Smith"
+		],
+		"href": "https://wg21.link/p0593r6",
+		"title": "Implicit creation of objects for low-level object manipulation",
+		"date": "2020-02-14"
+	},
+	"N4892": {
+		"authors": [
+			"Thomas Köppe"
+		],
+		"href": "https://wg21.link/N4892",
+		"title": "Working Draft, Standard for Programming Language C++",
+		"date": "2021-06-18"
+	}
+}
