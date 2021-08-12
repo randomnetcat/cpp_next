@@ -6,26 +6,25 @@ Status: D
 Group: WG21
 URL: http://example.com/url-this-spec-will-live-at
 Editor: Jason Cobb <jason.e.cobb@gmail.com>
-Abstract: This paper would ensure that conforming allocators can be implemented, by permitting the template argument to std::launder to be an array of unknown bound.
+Abstract: This paper would ensure that allocators implemented by allocating byte arrays can be implemented, by permitting the template argument to std::launder to be an array of unknown bound.
 </pre>
 
 Introduction {#intro}
 =====================
 
 [[P0593]] introduced the ability for objects to be implicitly created under
-certain circumstances.  In doing so, it added the requirement to allocators
+certain circumstances. In doing so, it added the requirement to allocators
 that, when <code>allocate(n)</code> is called, they create, and return a
 pointer to, a <code>T[n]</code>, without additionally creating any array
 elements. [[N4892]], in [allocator.requirements.general], provides the
-	following as an example of a way to implement this:
-	<code>std::launder(reinterpret_cast&lt;T*&gt;(new (p) std::byte[n *
-		sizeof(T)]))</code>.
+following as an example of a way to implement this:
+<code>std::launder(reinterpret_cast&lt;T*&gt;(new (p) std::byte[n * sizeof(T)]))</code>.
 
 This example is incorrect.
 
 After the lifetime of the <code>byte[]</code> is begun, objects can be
 implicitly created ([intro.object]/13).  There are two possible cases here,
-both of which result in UB. 
+both of which result in UB.
 
 First, if <code>T</code> is not an implicit-lifetime type, then only the array
 object can be created (since all array types are implicit-lifetime, even if the
@@ -36,11 +35,11 @@ pointer to the first element, it passes the pointer from <code>new</code> to
 
 <code>std::launder</code> has the following preconditions:
 <blockquote>
-	<code>p</code> represents the address <i>A</i> of a byte in memory. An
-	object <i>X</i> that is within its lifetime and whose type is similar
-	to <code>T</code> is located at the address <i>A</i>.  All bytes of
-	storage that would be reachable through the result are reachable
-	through <code>p</code> (see below).
+    <code>p</code> represents the address <i>A</i> of a byte in memory. An
+    object <i>X</i> that is within its lifetime and whose type is similar
+    to <code>T</code> is located at the address <i>A</i>. All bytes of
+    storage that would be reachable through the result are reachable
+    through <code>p</code> (see below).
 </blockquote>
 
 The result of <code>new</code> does not point to a <code>T</code>, and it
@@ -57,3 +56,140 @@ array element object, violating the requirements on <code>allocate</code>),
 yielding UB when used as a standard allocator per [res.on.functions]/2.3.  No
 set of implicitly created objects would give the program defined behavior, so
 the program has undefined behavior ([intro.object]/10).
+
+Problem {#problem}
+==================
+
+The fact that an example is incorrect is not a problem, since it can be fixed.
+The problem is that there is no proper way to do what the example hopes to
+accomplish. There is no reasonable standard way to allocate a <code>T[]</code> for a
+runtime value, then get a pointer to storage for the first element, which is
+what is required to implement <code>allocate</code>.
+
+This problem applies to any allocator which returns memory from a new
+<code>std::byte[]</code>, <code>unsigned char[]</code>, or <code>char[]</code>.
+
+Allocators based on <code>operator new</code>,
+<code>operator new[]</code>, <code>malloc</code>, <code>aligned_alloc</code>, and <code>calloc</code>
+can be implemented in such a way as to have defined behavior. All of those functions
+return a pointer to a suitable created object ([intro.object]/13 and [c.malloc]/4),
+so a conforming allocate can be implemented as
+<pre highlight="c++">
+T* allocate(size_type n) {
+    return *reinterpret_cast<T(*)[]>(::operator new(sizeof(T) * n));
+}
+</pre>
+
+In this implementation, <code>::operator new</code> returns a pointer to a
+suitable created <code>T[]</code>, then a pointer to storage for its first
+element is achieved by dereferencing the <code>T(*)[]</code> and relying on
+array-to-pointer decay to produce the final pointer.
+
+There is no equivalent for user-defined function that creates a
+<code>std::byte[]</code> for allocated objects. The only operations that return
+pointers to suitable created objects are invoking functions named
+<code>operator new</code> or <code>operator new[]</code> and invoking the
+standard functions named above (and <code>realloc</code>).
+
+In addition to suitable created objects being insufficient, there is no other
+(reasonable) way to obtain a pointer to a <code>T[]</code> implicitly created
+in a <code>std::byte[]</code>. <code>std::launder</code> looks promising, but
+it cannot be used to form a pointer to a <code>T[]</code> because of
+[res.on.functions]/2.5:
+<blockquote>
+
+    In particular, the effects are undefined in the following cases:
+
+    - [...]
+    - If an incomplete type is used as a template argument when instantiating a template component or evaluating a concept, unless specifically allowed for that component.
+
+</blockquote>
+
+No specific type <code>T[n]</code> can work for <code>std::launder</code>
+because <code>T[x]</code> and <code>T[y]</code> are not similar if <code>x != y</code>.
+
+However, a non-constant template argument to <code>std::launder</code> can work:
+<pre highlight="c++">
+    template&lt;typename T, std::size_t Min, std::size_t Max&gt;
+    auto do_launder_array(void* p, std::size_t n) -> T(*)[] {
+        if constexpr (Min == Max) {
+            std::abort();
+        } else {
+            if (n == Min) {
+                return std::launder(reinterpret_cast&lt;T(*)[Min]&gt;(p));
+            } else {
+                return ::do_launder_array&lt;T, Min + 1, Max&gt;(p, n);
+            }
+        }
+    }
+
+    inline constexpr std::size_t max_launder_array_size = 899;
+
+    template&lt;typename T&gt;
+    auto launder_array(void* p, std::size_t n) -> T(*)[] {
+        return ::do_launder_array&lt;T, 1, max_launder_array_size&gt;(p, n);
+    }
+
+    // In some allocator:
+    T* allocate(size_type n) {
+        return *::launder_array&lt;T&gt;(somehow_allocate_byte_array(n), n);
+    }
+</pre>
+
+This works by determining, at runtime, the type <code>T[n]</code> that the
+allocated pointer should be laundered to. There are many issues with this
+solution, however. First, it can only operate for <code>n</code> that are
+less than some compile-time constant. Second, this requires deeply-nested
+recursive template instantiations. Finally, this code is unreasonably
+complex for a simple operation: "get a pointer to a <code>T[]</code> that
+I know exists", even if the fact that it is known to exist is due to
+implicit object creation.
+
+Proposed Solution {#solution}
+=============================
+
+The solution proposed here is to allow laundering pointers to arrays of
+unknown bound. This allows acquiring a pointer to an implicitly created
+array, without requiring that any elements have been created.
+
+Since <code>T[n]</code> and <code>T[]</code> are similar, no further
+changes are needed to be able to satisfy the preconditions of
+<code>std::launder</code>.
+
+With this change, the following would be a conforming implementation of
+<code>allocate</code> for an allocator that places objects into <code>std::byte[]</code>s:
+
+<pre>
+    T* allocate(size_type n) {
+        return *std::launder(reinterpret_cast&ltT(*)[]&gt(somehow_allocate_byte_array(n)));
+    }
+</pre>
+
+Proposed Wording {#wording}
+===========================
+
+## 17.6.5 Pointer optimization barrier [ptr.launder]
+
+<pre>template&lt;class T&gt; &lbrack;&lbrack;nodiscard&rbrack;&rbrack; constexpr T* launder(T* p) noexcept;</pre>
+
+<blockquote>
+    Mandates: <code>!is_function_v&lt;T&gt; && !is_void_v&lt;T&gt;</code> is true.
+
+    Preconditions:
+    <code>p</code> represents the address <i>A</i> of a byte in memory.
+    An object <i>X</i> that is within its lifetime and whose type is similar
+    to <code>T</code> is located at the address <i>A</i>.
+    All bytes of storage that would be reachable through the result are
+    reachable through <code>p</code> (see below).
+
+    Returns: A value of type <code>T*</code> that points to <i>X</i>.
+
+    Remarks:
+    <ins><code>T</code> may be a type that is an array of unknown bound.</ins>
+    An invocation of this function may be used in a core constant
+    expression if and only if the (converted) value of its argument may be used
+    in place of the function invocation. A byte of storage <i>b</i> is reachable through
+    a pointer value that points to an object <i>Y</i> if there is an object <i>Z</i>,
+    pointer-interconvertible with <i>Y</i>, such that <i>b</i> is within the storage occupied
+    by <i>Z</i>, or the immediately-enclosing array object if <i>Z</i> is an array element.
+</blockquote>
