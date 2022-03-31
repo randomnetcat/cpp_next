@@ -76,7 +76,7 @@ return a pointer to a suitable created object ([intro.object]/13 and [c.malloc]/
 so a conforming allocate can be implemented as
 <pre highlight="c++">
 T* allocate(size_type n) {
-    return *reinterpret_cast<T(*)[]>(::operator new(sizeof(T) * n));
+    return *reinterpret_cast&lt;T(*)[]&gt;(::operator new(sizeof(T) * n));
 }
 </pre>
 
