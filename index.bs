@@ -14,8 +14,8 @@ Introduction {#intro}
 
 [[P0593]] introduced the ability for objects to be implicitly created under
 certain circumstances. In doing so, it added the requirement to allocators
-that, when <code>allocate(n)</code> is called, they create, and return a
-pointer to, a <code>T[n]</code>, without additionally creating any array
+that, when <code>allocate(n)</code> is called, they create
+ a <code>T[n]</code>, without additionally creating any array
 elements. [[N4892]], in [allocator.requirements.general], provides the
 following as an example of a way to implement this:
 <code>std::launder(reinterpret_cast&lt;T*&gt;(new (p) std::byte[n * sizeof(T)]))</code>.
@@ -62,11 +62,11 @@ Problem {#problem}
 
 The fact that an example is incorrect is not a problem, since it can be fixed.
 The problem is that there is no proper way to do what the example hopes to
-accomplish. There is no reasonable standard way to allocate a <code>T[]</code> for a
+accomplish. To the author's knowledge, there is no reasonable standard way to allocate a <code>T[]</code> for a
 runtime value, then get a pointer to storage for the first element, which is
 what is required to implement <code>allocate</code>.
 
-This problem applies to any allocator which returns memory from a new
+This problem applies to any allocator which returns memory from an allocated
 <code>std::byte[]</code>, <code>unsigned char[]</code>, or <code>char[]</code>.
 
 Allocators based on <code>operator new</code>,
@@ -161,7 +161,7 @@ With this change, the following would be a conforming implementation of
 
 <pre>
     T* allocate(size_type n) {
-        return *std::launder(reinterpret_cast&ltT(*)[]&gt(somehow_allocate_byte_array(n)));
+        return *std::launder(reinterpret_cast&lt;T(*)[]&gt;(somehow_allocate_byte_array(n)));
     }
 </pre>
 
