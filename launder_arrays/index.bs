@@ -19,13 +19,13 @@ Abstract: This paper would ensure that allocators implemented by allocating byte
 		"title": "Implicit creation of objects for low-level object manipulation",
 		"date": "2020-02-14"
 	},
-	"N4892": {
+	"N4910": {
 		"authors": [
 			"Thomas Köppe"
 		],
-		"href": "https://wg21.link/N4892",
+		"href": "https://wg21.link/N4910",
 		"title": "Working Draft, Standard for Programming Language C++",
-		"date": "2021-06-18"
+		"date": "2022-03-17"
 	}
 }
 </pre>
@@ -37,7 +37,7 @@ Introduction {#intro}
 certain circumstances. In doing so, it added the requirement to allocators
 that, when <code>allocate(n)</code> is called, they create
  a <code>T[n]</code>, without additionally creating any array
-elements. [[N4892]], in [allocator.requirements.general], provides the
+elements. [[N4910]], in [allocator.requirements.general], provides the
 following as an example of a way to implement this:
 <code>std::launder(reinterpret_cast&lt;T*&gt;(new (p) std::byte[n * sizeof(T)]))</code>.
 
