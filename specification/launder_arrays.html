@@ -1563,7 +1563,7 @@ Possible extra rowspan handling
   <meta content="Bikeshed version fb1e763a4, updated Tue Mar 1 13:13:50 2022 -0800" name="generator">
   <link href="http://example.com/url-this-spec-will-live-at" rel="canonical">
   <link href="https://isocpp.org/favicon.ico" rel="icon">
-  <meta content="3ea26d2f773702073d7cac3eac1aaa8c2da3f6a8" name="document-revision">
+  <meta content="7f0ca315d4484f2ae54270feaeee72834e8bcce4" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -2125,7 +2125,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
 certain circumstances. In doing so, it added the requirement to allocators
 that, when <code class="highlight"><c- n>allocate</c-><c- p>(</c-><c- n>n</c-><c- p>)</c-></code> is called, they create
  a <code class="highlight"><c- n>T</c-><c- p>[</c-><c- n>n</c-><c- p>]</c-></code>, without additionally creating any array
-elements. <a data-link-type="biblio" href="#biblio-n4892">[N4892]</a>, in [allocator.requirements.general], provides the
+elements. <a data-link-type="biblio" href="#biblio-n4910">[N4910]</a>, in [allocator.requirements.general], provides the
 following as an example of a way to implement this: <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>launder</c-><c- p>(</c-><c- k>reinterpret_cast</c-><c- o>&lt;</c-><c- n>T</c-><c- o>*></c-><c- p>(</c-><c- k>new</c-> <c- p>(</c-><c- n>p</c-><c- p>)</c-> <c- n>std</c-><c- o>::</c-><c- n>byte</c-><c- p>[</c-><c- n>n</c-> <c- o>*</c-> <c- k>sizeof</c-><c- p>(</c-><c- n>T</c-><c- p>)]))</c-></code>.</p>
    <p>This example is incorrect.</p>
    <p>After the lifetime of the <code class="highlight"><c- n>byte</c-><c- p>[]</c-></code> is begun, objects can be
@@ -2392,8 +2392,8 @@ changes are needed to be able to satisfy the preconditions of <code class="highl
   <h2 class="no-num no-ref heading settled" id="references"><span class="content">References</span><a class="self-link" href="#references"></a></h2>
   <h3 class="no-num no-ref heading settled" id="informative"><span class="content">Informative References</span><a class="self-link" href="#informative"></a></h3>
   <dl>
-   <dt id="biblio-n4892">[N4892]
-   <dd>Thomas Köppe. <a href="https://wg21.link/n4892"><cite>Working Draft, Standard for Programming Language C++</cite></a>. 18 June 2021. URL: <a href="https://wg21.link/n4892">https://wg21.link/n4892</a>
+   <dt id="biblio-n4910">[N4910]
+   <dd>Thomas Köppe. <a href="https://wg21.link/N4910"><cite>Working Draft, Standard for Programming Language C++</cite></a>. 2022-03-17. URL: <a href="https://wg21.link/N4910">https://wg21.link/N4910</a>
    <dt id="biblio-p0593">[P0593]
    <dd>Richard Smith. <a href="https://wg21.link/p0593r6"><cite>Implicit creation of objects for low-level object manipulation</cite></a>. 2020-02-14. URL: <a href="https://wg21.link/p0593r6">https://wg21.link/p0593r6</a>
   </dl>
