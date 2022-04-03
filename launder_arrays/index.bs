@@ -62,18 +62,19 @@ Problem {#problem}
 
 The fact that an example is incorrect is not a problem, since it can be fixed.
 The problem is that there is no proper way to do what the example hopes to
-accomplish. To the author's knowledge, there is no reasonable standard way to allocate a <code>T[]</code> for a
-runtime value, then get a pointer to storage for the first element, which is
-what is required to implement <code>allocate</code>.
+accomplish. To the author's knowledge, there is no reasonable standard way to
+allocate a <code>T[n]</code> for a runtime value of <code>n</code>, then get a
+pointer to storage for the first element, which is what is required to
+implement <code>allocate</code>.
 
 This problem applies to any allocator which returns memory from an allocated
 <code>std::byte[]</code>, <code>unsigned char[]</code>, or <code>char[]</code>.
 
-Allocators based on <code>operator new</code>,
-<code>operator new[]</code>, <code>malloc</code>, <code>aligned_alloc</code>, and <code>calloc</code>
-can be implemented in such a way as to have defined behavior. All of those functions
-return a pointer to a suitable created object ([intro.object]/13 and [c.malloc]/4),
-so a conforming allocate can be implemented as
+Allocators based on <code>operator new</code>, <code>operator new[]</code>,
+<code>malloc</code>, <code>aligned_alloc</code>, and <code>calloc</code> can be
+implemented in such a way as to have defined behavior. All of those functions
+return a pointer to a suitable created object ([intro.object]/13 and
+[c.malloc]/4), so a conforming allocate can be implemented as
 <pre highlight="c++">
 T* allocate(size_type n) {
     return *reinterpret_cast&lt;T(*)[]&gt;(::operator new(sizeof(T) * n));
@@ -85,11 +86,12 @@ suitable created <code>T[]</code>, then a pointer to storage for its first
 element is achieved by dereferencing the <code>T(*)[]</code> and relying on
 array-to-pointer decay to produce the final pointer.
 
-There is no equivalent for user-defined function that creates a
+There is no equivalent for user-defined functions that create a
 <code>std::byte[]</code> for allocated objects. The only operations that return
 pointers to suitable created objects are invoking functions named
 <code>operator new</code> or <code>operator new[]</code> and invoking the
-standard functions named above (and <code>realloc</code>).
+standard functions named above (and <code>realloc</code>, but that's not
+helpful here).
 
 In addition to suitable created objects being insufficient, there is no other
 (reasonable) way to obtain a pointer to a <code>T[]</code> implicitly created
@@ -97,21 +99,24 @@ in a <code>std::byte[]</code>. <code>std::launder</code> looks promising, but
 it cannot be used to form a pointer to a <code>T[]</code> because of
 [res.on.functions]/2.5:
 <blockquote>
+In particular, the effects are undefined in the following cases:
 
-    In particular, the effects are undefined in the following cases:
-
-    - [...]
-    - If an incomplete type is used as a template argument when instantiating a template component or evaluating a concept, unless specifically allowed for that component.
-
+<ul>
+<li>[...]</li>
+<li>If an incomplete type is used as a template argument when instantiating a
+template component or evaluating a concept, unless specifically allowed for
+that component.<li>
+</ul>
 </blockquote>
 
 No specific type <code>T[n]</code> can work for <code>std::launder</code>
-because <code>T[x]</code> and <code>T[y]</code> are not similar if <code>x != y</code>.
+because <code>T[x]</code> and <code>T[y]</code> are not similar if <code>x !=
+y</code>.
 
 However, a non-constant template argument to <code>std::launder</code> can work:
 <pre highlight="c++">
     template&lt;typename T, std::size_t Min, std::size_t Max&gt;
-    auto do_launder_array(void* p, std::size_t n) -> T(*)[] {
+    auto do_launder_array(void* p, std::size_t n) -&gt; T(*)[] {
         if constexpr (Min == Max) {
             std::abort();
         } else {
@@ -126,7 +131,7 @@ However, a non-constant template argument to <code>std::launder</code> can work:
     inline constexpr std::size_t max_launder_array_size = 899;
 
     template&lt;typename T&gt;
-    auto launder_array(void* p, std::size_t n) -> T(*)[] {
+    auto launder_array(void* p, std::size_t n) -&gt; T(*)[] {
         return ::do_launder_array&lt;T, 1, max_launder_array_size&gt;(p, n);
     }
 
@@ -173,7 +178,7 @@ Proposed Wording {#wording}
 <pre>template&lt;class T&gt; &lbrack;&lbrack;nodiscard&rbrack;&rbrack; constexpr T* launder(T* p) noexcept;</pre>
 
 <blockquote>
-    Mandates: <code>!is_function_v&lt;T&gt; && !is_void_v&lt;T&gt;</code> is true.
+    Mandates: <code>!is_function_v&lt;T&gt; &amp;&amp; !is_void_v&lt;T&gt;</code> is true.
 
     Preconditions:
     <code>p</code> represents the address <i>A</i> of a byte in memory.
