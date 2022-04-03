@@ -9,6 +9,27 @@ Editor: Jason Cobb <jason.e.cobb@gmail.com>
 Abstract: This paper would ensure that allocators implemented by allocating byte arrays can be implemented, by permitting the template argument to std::launder to be an array of unknown bound.
 </pre>
 
+<pre class="biblio">
+{
+	"P0593": {
+		"authors": [
+			"Richard Smith"
+		],
+		"href": "https://wg21.link/p0593r6",
+		"title": "Implicit creation of objects for low-level object manipulation",
+		"date": "2020-02-14"
+	},
+	"N4892": {
+		"authors": [
+			"Thomas Köppe"
+		],
+		"href": "https://wg21.link/N4892",
+		"title": "Working Draft, Standard for Programming Language C++",
+		"date": "2021-06-18"
+	}
+}
+</pre>
+
 Introduction {#intro}
 =====================
 
