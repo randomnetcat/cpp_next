@@ -126,7 +126,7 @@ In particular, the effects are undefined in the following cases:
 <li>[...]</li>
 <li>If an incomplete type is used as a template argument when instantiating a
 template component or evaluating a concept, unless specifically allowed for
-that component.<li>
+that component.</li>
 </ul>
 </blockquote>
 
