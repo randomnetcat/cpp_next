@@ -1,0 +1,49 @@
+name: CI
+on:
+  pull_request:
+    branches-ignore: gh-pages
+  push:
+    branches-ignore: gh-pages
+jobs:
+  launder_arrays:
+    name: Build launder_arrays
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.7'
+      - name: Install bikeshed
+        run: |
+          pip3 install bikeshed && bikeshed update
+      - name: Build specification
+        run: |
+          mkdir specification
+          bikeshed spec launder_arrays/index.bs specification/launder_arrays.html
+      - name: Upload specification
+        uses: actions/upload-artifact@v2
+        with:
+          name: launder_arrays_spec
+          path: specification/launder_arrays.html
+  deploy:
+    name: Deploy specifications
+    runs-on: ubuntu-20.04
+    if: ${{ github.ref == 'refs/heads/main' && success() }}
+    needs: [launder_arrays]
+    steps:
+      - name: Download built launder_arrays
+        uses: actions/download-artifact@v2
+        with:
+          name: launder_arrays_spec
+          path: gh-pages/specification/
+      - name: Deploy reports to Github Pages
+        uses: crazy-max/ghaction-github-pages@v2.0.0
+        with:
+          target_branch: gh-pages
+          keep_history: true
+          allow_empty_commit: false
+          build_dir: "gh-pages"
+          author: "ci-build <ci-build@randomcat.org>"
+          commit_message: "CI Updates"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
