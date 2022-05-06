@@ -1563,7 +1563,7 @@ Possible extra rowspan handling
   <meta content="Bikeshed version fb1e763a4, updated Tue Mar 1 13:13:50 2022 -0800" name="generator">
   <link href="http://example.com/url-this-spec-will-live-at" rel="canonical">
   <link href="https://isocpp.org/favicon.ico" rel="icon">
-  <meta content="a3fddd7f5e21f3184a957118c2f855b460bf200e" name="document-revision">
+  <meta content="3e2529f9ce93914eb9835d4f3d7841af134e9fe3" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -2083,7 +2083,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">PXXXXR0<br>Laundering for Arrays of Unknown Bound</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2022-04-03">2022-04-03</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2022-05-06">2022-05-06</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -2250,7 +2250,7 @@ changes are needed to be able to satisfy the preconditions of <code class="highl
     reachable through <code class="highlight"><c- n>p</c-></code> (see below).</p>
     <p>Returns: A value of type <code class="highlight"><c- n>T</c-><c- o>*</c-></code> that points to <i>X</i>.</p>
     <p>Remarks:</p>
-    <ins><code class="highlight"><c- n>T</c-></code> may be a type that is an array of unknown bound.</ins>
+    <ins><code class="highlight"><c- n>T</c-></code> may be a type that is an array of unknown bound with complete element type.</ins>
      An invocation of this function may be used in a core constant
     expression if and only if the (converted) value of its argument may be used
     in place of the function invocation. A byte of storage <i>b</i> is reachable through
