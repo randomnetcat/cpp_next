@@ -211,7 +211,7 @@ Proposed Wording {#wording}
     Returns: A value of type <code>T*</code> that points to <i>X</i>.
 
     Remarks:
-    <ins><code>T</code> may be a type that is an array of unknown bound.</ins>
+    <ins><code>T</code> may be a type that is an array of unknown bound with complete element type.</ins>
     An invocation of this function may be used in a core constant
     expression if and only if the (converted) value of its argument may be used
     in place of the function invocation. A byte of storage <i>b</i> is reachable through
